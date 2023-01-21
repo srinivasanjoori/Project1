@@ -1,0 +1,110 @@
+Tf+K8s   
+
+Here's an example of how you might use Terraform to create a Kubernetes cluster:
+
+TheCode:
+resource "aws_eks_cluster" "example" {
+  name     = "example"
+  role_arn = aws_iam_role.example.arn
+}
+
+resource "aws_iam_role" "example" {
+  name = "example"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "eks.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+Here's an example of how you might use Kubernetes manifests (YAML files) to create the necessary Kubernetes objects such as Deployment, Service, ConfigMap, and Secrets.
+
+TheCode:
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo
+  labels:
+    app: mongo
+spec:
+  selector:
+    app: mongo
+  ports:
+    - name: mongo
+      protocol: TCP
+      port: 27017
+      targetPort: 27017
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo
+  labels:
+    app: mongo
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: mongo
+  template:
+    metadata:
+      labels:
+        app: mongo
+    spec:
+      containers:
+        - name: mongo
+          image: mongo:latest
+          ports:
+            - containerPort: 27017
+          resources:
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+            requests:
+              memory: "128Mi"
+              cpu: "250m"
+          volumeMounts:
+            - name: mongodb-data
+              mountPath: /data/db
+      volumes:
+        - name: mongodb-data
+          persistentVolumeClaim:
+            claimName: mongodb-data
+
+
+Here's an example of how you might use Kubernetes Network Policies to restrict access to the MongoDB pods
+
+TheCode:
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mongo-network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app: mongo
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: mongo-client
+Here's an example of how you might use Kubernetes Persistent Volume Claims to ensure data is stored persistently
+
+TheCode:
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongodb-data
+  annotations:
+    volume.beta.k
